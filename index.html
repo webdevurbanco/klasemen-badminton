@@ -495,4 +495,59 @@
 
             const shuffled = [...activePlayers].sort(() => 0.5 - Math.random());
             currentMatch = {
+                playerA1: shuffled[0].name, playerA2: shuffled[1].name,
+playerB1: shuffled[2].name, playerB2: shuffled[3].name
+};
+document.getElementById('teamANames').innerText = ${currentMatch.playerA1} & ${currentMatch.playerA2};
+document.getElementById('teamBNames').innerText = ${currentMatch.playerB1} & ${currentMatch.playerB2};
+['scoreA1', 'scoreB1', 'scoreA2', 'scoreB2', 'scoreA3', 'scoreB3'].forEach(id => document.getElementById(id).value = '');
+const matchArea = document.getElementById('matchArea');
+matchArea.classList.remove('hidden');
+matchArea.scrollIntoView({ behavior: 'smooth' });
+}
+function submitScore() {
+if (!currentMatch) return;
+const sa1 = parseInt(document.getElementById('scoreA1').value) || 0;
+const sb1 = parseInt(document.getElementById('scoreB1').value) || 0;
+const sa2 = parseInt(document.getElementById('scoreA2').value) || 0;
+const sb2 = parseInt(document.getElementById('scoreB2').value) || 0;
+const sa3 = parseInt(document.getElementById('scoreA3').value) || 0;
+const sb3 = parseInt(document.getElementById('scoreB3').value) || 0;
+if ((sa1 === 0 && sb1 === 0) || (sa2 === 0 && sb2 === 0)) return alert('Isi skor minimal Set 1 & Set 2!');
+let setsWonA = 0, setsWonB = 0;
+let totalPointsA = sa1 + sa2 + sa3, totalPointsB = sb1 + sb2 + sb3;
+if (sa1 > sb1) setsWonA++; else if (sb1 > sa1) setsWonB++;
+if (sa2 > sb2) setsWonA++; else if (sb2 > sa2) setsWonB++;
+if ((sa3 > 0 || sb3 > 0) && (sa3 !== sb3)) {
+if (sa3 > sb3) setsWonA++; else setsWonB++;
+}
+const isWinA = setsWonA > setsWonB;
+const gameDiff = setsWonA - setsWonB;
+const pointDiff = totalPointsA - totalPointsB;
+players.forEach(p => {
+if (p.name === currentMatch.playerA1 || p.name === currentMatch.playerA2) {
+p.played += 1; if (isWinA) p.won += 1; else p.lost += 1;
+p.gameDiff += gameDiff; p.pointDiff += pointDiff;
+}
+if (p.name === currentMatch.playerB1 || p.name === currentMatch.playerB2) {
+p.played += 1; if (!isWinA) p.won += 1; else p.lost += 1;
+p.gameDiff += (-gameDiff); p.pointDiff += (-pointDiff);
+}
+});
+document.getElementById('matchArea').classList.add('hidden');
+currentMatch = null;
+saveAndRefresh();
+}
+function resetStandings() {
+if (confirm('Reset semua poin klasemen kembali ke 0?')) {
+players.forEach(p => { p.played = 0; p.won = 0; p.lost = 0; p.gameDiff = 0; p.pointDiff = 0; });
+saveAndRefresh();
+}
+}
+function clearAllPlayers() {
+if (confirm('Hapus seluruh daftar nama pemain dari aplikasi?')) {
+players = [];
+saveAndRefresh();
+}
+}
 
