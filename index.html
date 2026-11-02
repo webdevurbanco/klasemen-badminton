@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klasemen Badminton Mabar Ganda</title>
+    <!-- Tailwind CSS untuk Desain Modern & Responsif -->
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-8">
+        <!-- Header: Tema Putih Abu-Abu Gelap -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 text-gray-900 shadow-sm text-center">
+            <h1 class="text-3xl font-extrabold tracking-wide text-gray-900">🏆 KLASEMEN BADMINTON</h1>
+            <p class="text-gray-500 mt-2 text-sm md:text-base font-medium">Sistem Kocok Pasangan Ganda & Hitung Poin Perorangan</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- KOLOM KIRI: MANAJEMEN & ABSENSI PEMAIN -->
+            <div class="space-y-6 lg:col-span-1">
+                <!-- Tambah Pemain -->
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <h2 class="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">👤 Tambah Pemain Baru</h2>
+                    <div class="flex gap-2">
+                        <input id="playerNameInput" type="text" placeholder="Nama Pemain..." class="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm text-gray-900">
+                        <button onclick="addPlayer()" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold text-sm transition">Tambah</button>
+                    </div>
+                </div>
+
+                <!-- Absen Mingguan (Urutan A-Z) -->
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">✅ Absen Hadir (A-Z)</h2>
+                        <span id="activeCount" class="bg-gray-200 text-gray-800 text-xs font-bold px-2.5 py-1 rounded-full">0 Terpilih</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-3">Centang pemain yang hadir untuk ikut kocokan minggu ini.</p>
+                    <div id="playerCheckboxList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <!-- List pemain akan muncul di sini secara otomatis -->
+                    </div>
+                    <button onclick="resetStandings()" class="w-full mt-4 bg-gray-50 text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg font-medium text-xs transition text-center border border-gray-200">
+                        🔄 Reset Poin Semua Pemain
+                    </button>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN: UNDIAN & KLASEMEN -->
+            <div class="space-y-6 lg:col-span-2">
+                <!-- Generator Undian Match -->
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm border-l-4 border-gray-500">
+                    <h2 class="text-base font-bold mb-3 text-gray-900">🎲 Kocok Pertandingan</h2>
+                    <button onclick="generateMatch()" class="w-full md:w-auto bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-sm transition mb-4">
+                        ⚡ Acak Pasangan Sekarang
+                    </button>
+
+                    <!-- Form Input Skor (Muncul setelah diacak) -->
+                    <div id="matchArea" class="hidden border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-4">
+                        <div class="grid grid-cols-7 items-center gap-2 text-center font-bold text-sm">
+                            <div class="col-span-3 bg-white border border-gray-300 p-2.5 rounded-lg text-gray-900 shadow-sm" id="teamANames">Tim A</div>
+                            <div class="col-span-1 text-gray-400 font-extrabold text-base">VS</div>
+                            <div class="col-span-3 bg-white border border-gray-300 p-2.5 rounded-lg text-gray-900 shadow-sm" id="teamBNames">Tim B</div>
+                        </div>
+
+                        <!-- Input Skor Per Set -->
+                        <div class="space-y-2">
+                            <div class="grid grid-cols-7 gap-2 items-center">
+                                <div class="col-span-3 text-right"><input type="number" id="scoreA1" placeholder="0" class="w-16 px-2 py-1.5 text-center bg-white border border-gray-300 rounded text-gray-900 font-bold"></div>
+                                <div class="col-span-1 text-center text-xs font-semibold text-gray-500">Set 1</div>
+                                <div class="col-span-3 text-left"><input type="number" id="scoreB1" placeholder="0" class="w-16 px-2 py-1.5 text-center bg-white border border-gray-300 rounded text-gray-900 font-bold"></div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-2 items-center">
+                                <div class="col-span-3 text-right"><input type="number" id="scoreA2" placeholder="0" class="w-16 px-2 py-1.5 text-center bg-white border border-gray-300 rounded text-gray-900 font-bold"></div>
+                                <div class="col-span-1 text-center text-xs font-semibold text-gray-500">Set 2</div>
+                                <div class="col-span-3 text-left"><input type="number" id="scoreB2" placeholder="0" class="w-16 px-2 py-1.5 text-center bg-white border border-gray-300 rounded text-gray-900 font-bold"></div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-2 items-center">
+                                <div class="col-span-3 text-right"><input type="number" id="scoreA3" placeholder="0" class="w-16 px-2 py-1.5 text-center bg-white border border-gray-300 rounded text-gray-900 font-bold"></div>
+                                <div class="col-span-1 text-center text-xs font-semibold text-gray-500">Set 3</div>
+                                <div class="col-span-3 text-left"><input type="number" id="scoreB3" placeholder="0" class="w-16 px-2 py-1.5 text-center bg-white border border-gray-300 rounded text-gray-900 font-bold"></div>
+                            </div>
+                        </div>
+                        <button onclick="submitScore()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 rounded-lg text-sm transition">
+                            💾 Simpan Hasil Pertandingan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabel Klasemen Utama -->
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm overflow-hidden">
+                    <h2 class="text-base font-bold mb-4 text-gray-900 flex items-center gap-2">📊 Klasemen Sementara Hari Ini</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                                    <th class="py-3 px-2 text-center w-12">Pos</th>
+                                    <th class="py-3 px-3">Nama Pemain</th>
+                                    <th class="py-3 px-2 text-center text-gray-900 font-bold">Main</th>
+                                    <th class="py-3 px-2 text-center text-gray-900 font-bold">Menang</th>
+                                    <th class="py-3 px-2 text-center text-gray-500">Kalah</th>
+                                    <th class="py-3 px-2 text-center text-gray-700">Selisih Set</th>
+                                    <th class="py-3 px-2 text-center text-gray-700">Selisih Poin</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div class="max-h-96 overflow-y-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <tbody id="standingsTableBody">
+                                    <!-- Data Klasemen Di-generate di Sini -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIKA APLIKASI (JAVASCRIPT) -->
+    <script>
+        let players = JSON.parse(localStorage.getItem('badminton_players')) || [];
+        let currentMatch = null;
+
+        updateUI();
+
+        function addPlayer() {
+            const nameInput = document.getElementById('playerNameInput');
+            const name = nameInput.value.trim();
+            if (!name) return alert('Nama tidak boleh kosong!');
+            if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) return alert('Nama pemain sudah ada!');
+
+            players.push({
+                name: name,
+                checked: true,
+                played: 0, won: 0, lost: 0, gameDiff: 0, pointDiff: 0
+            });
+            nameInput.value = '';
+            saveAndRefresh();
+        }
+
+        function togglePlayerCheck(index) {
+            players[index].checked = !players[index].checked;
+            saveAndRefresh();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('badminton_players', JSON.stringify(players));
+            updateUI();
+        }
+
+        function updateUI() {
+            // 1. URUTKAN DAFTAR ABSENSI A-Z
