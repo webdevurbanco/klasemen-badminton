@@ -20,7 +20,7 @@
             color: #111827;
             display: flex;
             justify-content: center;
-            min-h: 100vh;
+            min-height: 100vh;
         }
         /* Memaksa Layout Berada di Tengah Seperti Aplikasi HP */
         .app-container {
@@ -132,7 +132,7 @@
         .match-header {
             display: flex;
             justify-content: space-between;
-            border-b: 1px solid #f3f4f6;
+            border-bottom: 1px solid #f3f4f6;
             padding-bottom: 8px;
             margin-bottom: 12px;
         }
@@ -227,11 +227,9 @@
             padding: 12px 6px;
             border-bottom: 1px solid #f3f4f6;
         }
-        .row-leader { background-color: #111827 !0; color: #ffffff !important; font-weight: 700; }
-        .row-even { background-color: #f9fafb; }
-        .row-odd { background-color: #ffffff; }
         .text-center { text-align: center; }
         .font-bold { font-weight: 700; }
+        
         /* Grid Absensi Anggota */
         .input-group {
             display: flex;
@@ -306,7 +304,7 @@
         <!-- Header -->
         <header>
             <div>
-                <h1>🏸 URBAN BADMINTON KLASEMEN</h1>
+                <h1>🏸 MABAR KLASEMEN</h1>
                 <p>GANDA PERORANGAN</p>
             </div>
             <span id="activeCountBadge" class="badge">0 Pemain</span>
@@ -325,3 +323,176 @@
             <!-- Area Input Skor (Live Match) -->
             <div id="matchArea" class="match-box hidden">
                 <div class="match-header">
+                    <span style="font-size: 11px; font-weight:700; color:#9ca3af; text-transform: uppercase;">Pertandingan</span>
+                    <span class="live-tag">LIVE MATCH</span>
+                </div>
+                <div class="vs-container">
+                    <div class="team-box" id="teamANames">-</div>
+                    <div style="color:#9ca3af; font-style:italic;">VS</div>
+                    <div class="team-box" id="teamBNames">-</div>
+                </div>
+                <div class="score-inputs">
+                    <div class="score-row">
+                        <div style="text-align: right;"><input type="number" inputmode="numeric" id="scoreA1" class="input-skor"></div>
+                        <div class="set-label">SET 1</div>
+                        <div><input type="number" inputmode="numeric" id="scoreB1" class="input-skor"></div>
+                    </div>
+                    <div class="score-row">
+                        <div style="text-align: right;"><input type="number" inputmode="numeric" id="scoreA2" class="input-skor"></div>
+                        <div class="set-label">SET 2</div>
+                        <div><input type="number" inputmode="numeric" id="scoreB2" class="input-skor"></div>
+                    </div>
+                    <div class="score-row">
+                        <div style="text-align: right;"><input type="number" inputmode="numeric" id="scoreA3" placeholder="-" class="input-skor"></div>
+                        <div class="set-label">SET 3</div>
+                        <div><input type="number" inputmode="numeric" id="scoreB3" placeholder="-" class="input-skor"></div>
+                    </div>
+                </div>
+                <button onclick="submitScore()" class="btn-success">💾 Simpan Hasil Pertandingan</button>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">📊 Peringkat Perorangan</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 35px; text-align:center;">#</th>
+                                <th style="text-align: left; padding-left:8px;">Nama</th>
+                                <th style="text-align: center; color:#111827">M</th>
+                                <th style="text-align: center; color:#047857">W</th>
+                                <th style="text-align: center; color:#dc2626">L</th>
+                                <th style="text-align: center;">+/-G</th>
+                                <th style="text-align: center; padding-right:6px;">+/-P</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standingsTableBody">
+                            <!-- Diisi Otomatis via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">👥 Kehadiran & Anggota Klub</h2>
+                <div class="input-group">
+                    <input id="playerNameInput" type="text" placeholder="Masukkan nama baru..." class="input-text">
+                    <button onclick="addPlayer()" class="btn-add">＋</button>
+                </div>
+                <div id="playerCheckboxList" class="checkbox-grid">
+                </div>
+                <div class="footer-btns">
+                    <button onclick="resetStandings()" class="btn-sub btn-reset">🔄 Reset Poin</button>
+                    <button onclick="clearAllPlayers()" class="btn-sub btn-clear">❌ Hapus Semua</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let players = JSON.parse(localStorage.getItem('badminton_players')) || [];
+        let currentMatch = null;
+
+        updateUI();
+
+        function addPlayer() {
+            const nameInput = document.getElementById('playerNameInput');
+            const name = nameInput.value.trim();
+            if (!name) return;
+            if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) return alert('Pemain sudah terdaftar!');
+
+            players.push({
+                name: name, checked: true,
+                played: 0, won: 0, lost: 0, gameDiff: 0, pointDiff: 0
+            });
+            nameInput.value = '';
+            saveAndRefresh();
+        }
+
+        function togglePlayerCheck(index) {
+            players[index].checked = !players[index].checked;
+            saveAndRefresh();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('badminton_players', JSON.stringify(players));
+            updateUI();
+        }
+
+        function updateUI() {
+            // 1. RENDERING CHECKLIST ABSENSI (A-Z)
+            const sortedForAbsen = [...players].map((p, idx) => ({...p, idx})).sort((a, b) => a.name.localeCompare(b.name));
+            const checkboxList = document.getElementById('playerCheckboxList');
+            checkboxList.innerHTML = '';
+            let activeCount = 0;
+
+            sortedForAbsen.forEach(p => {
+                if (p.checked) activeCount++;
+                checkboxList.innerHTML += `
+                    <label class="check-label">
+                        <input type="checkbox" ${p.checked ? 'checked' : ''} onchange="togglePlayerCheck(${p.idx})" class="check-box">
+                        <span style="${p.checked ? '' : 'color: #9ca3af; text-decoration: line-through;'} text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${p.name}</span>
+                    </label>
+                `;
+            });
+            document.getElementById('activeCountBadge').innerText = `${activeCount} Pemain`;
+
+            // 2. RENDERING TABEL KLASEMEN (URUT STANDAR BWF)
+            const sortedForStandings = [...players].sort((a, b) => {
+                if (b.won !== a.won) return b.won - a.won;
+                if (b.gameDiff !== a.gameDiff) return b.gameDiff - a.gameDiff;
+                return b.pointDiff - a.pointDiff;
+            });
+
+            const standingsBody = document.getElementById('standingsTableBody');
+            standingsBody.innerHTML = '';
+
+            if (sortedForStandings.length === 0) {
+                standingsBody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 24px; color: #9ca3af; font-style: italic;">Belum ada data anggota.</td></tr>`;
+            } else {
+                sortedForStandings.forEach((player, index) => {
+                    let rowStyle = '';
+                    let rankText = index + 1;
+                    
+                    if (index === 0) {
+                        rowStyle = 'background-color: #111827; color: #ffffff; font-weight: 700;';
+                        rankText = '🥇';
+                    } else {
+                        rowStyle = index % 2 === 0 ? 'background-color: #f9fafb;' : 'background-color: #ffffff;';
+                        if (index === 1) rankText = '🥈';
+                        if (index === 2) rankText = '🥉';
+                    }
+
+                    const gameSign = player.gameDiff > 0 ? '+' : '';
+                    const pointSign = player.pointDiff > 0 ? '+' : '';
+                    
+                    let gameColor = player.gameDiff >= 0 ? 'color: #047857;' : 'color: #dc2626;';
+                    let pointColor = player.pointDiff >= 0 ? 'color: #047857;' : 'color: #dc2626;';
+                    
+                    if (index === 0) { 
+                        gameColor = 'color: #34d399;'; 
+                        pointColor = 'color: #34d399;'; 
+                    }
+
+                    standingsBody.innerHTML += `
+                        <tr style="${rowStyle}">
+                            <td class="text-center font-bold" style="padding: 12px 6px;">${rankText}</td>
+                            <td style="padding-left: 8px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 110px;">${player.name}</td>
+                            <td class="text-center font-bold">${player.played}</td>
+                            <td class="text-center font-bold" style="${index === 0 ? 'color: #34d399;' : 'color: #047857;'}">${player.won}</td>
+                            <td class="text-center" style="${index === 0 ? 'color: #f87171;' : 'color: #9ca3af;'}">${player.lost}</td>
+                            <td class="text-center font-bold" style="${gameColor}">${gameSign}${player.gameDiff}</td>
+                            <td class="text-center font-bold" style="${pointColor} padding-right:6px;">${pointSign}${player.pointDiff}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function generateMatch() {
+            const activePlayers = players.filter(p => p.checked);
+            if (activePlayers.length < 4) return alert('Butuh minimal 4 orang pemain yang aktif/hadir!');
+
+            const shuffled = [...activePlayers].sort(() => 0.5 - Math.random());
+            currentMatch = {
+
